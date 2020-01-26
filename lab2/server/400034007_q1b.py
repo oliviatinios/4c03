@@ -6,6 +6,14 @@ def proxy_server():
     host = socket.gethostname()
     port = 8090
 
+    # create headers for HTTP response message
+    headers = """\
+    HTTP/1.1 200 OK\r
+    Content-Type: {content_type}\r
+    Content-Length: {content_length}\r
+    Connection: keep-alive\r
+    \r\n"""
+
     # get socket instance
     server_socket = socket.socket()
     # bind host and port togehter
@@ -18,14 +26,24 @@ def proxy_server():
     print("Connection from: " + str(address))
 
     while True:
-        # receive data packet
+        # receive HTTP POST request from client
         data = conn.recv(1024).decode()
         if not data:
             break
-        print("Received from client: " + str(data))
-        data = input(' -> ')
+        # get body from HTTP POST request
+        body = data.split('\r\n')[-1]
+        print("Received from client: " + str(body))
+        # create body of HTTP response message
+        body = 'ftp response placeholder'
+        # encode body and headers 
+        body_bytes = body.encode('ascii')
+        header_bytes = headers.format(
+                content_type="text/html; encoding=utf8",
+                content_length=len(body_bytes)
+        ).encode('iso-8859-1')
+
         # send response to client
-        conn.send(data.encode())
+        conn.sendall(header_bytes + body_bytes)
 
     # close the connection
     conn.close()
